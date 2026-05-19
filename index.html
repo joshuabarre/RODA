@@ -567,6 +567,48 @@ tbody td {
   white-space: nowrap;
 }
 tbody td:first-child { color: var(--text); font-weight: 500; }
+.btn-see-more {
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  color: var(--text-faint);
+  font-size: 12px;
+  font-family: var(--mono);
+  cursor: pointer;
+  padding: 4px 10px;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.btn-see-more:hover { color: var(--accent); border-color: var(--accent); background: rgba(212,255,0,0.06); }
+.expand-row td { padding: 0; }
+.expand-panel {
+  padding: 28px 24px 20px;
+  background: var(--bg-3);
+  border-top: 1px solid var(--line-bright);
+  border-bottom: 1px solid var(--line);
+}
+.expand-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px 20px;
+}
+.expand-field-full { grid-column: 1 / -1; }
+.expand-label {
+  display: block;
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: 7px;
+}
+.expand-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
 .btn-delete {
   background: none;
   border: 1px solid transparent;
@@ -1112,6 +1154,91 @@ function switchTab(tab) {
 // ============================================================
 // DATA VIEW
 // ============================================================
+const FIELD_LABELS = {
+  orgName: 'Organization Name', region: 'Region', primaryFocus: 'Primary Focus',
+  orgSize: 'Organization Size', studentGroup: 'Assigned Student',
+  contactEmail: 'Contact Email', website: 'Website / Social Link',
+  outreach: 'Outreach Status', consent: 'Data Consent', dateLogged: 'Date Logged',
+  fundingArch: 'Funding Architecture', instFriction: 'Institutional Friction',
+  opTrauma: 'Operational Trauma', diasporaReal: 'Diaspora Realities', notes: 'Notes',
+};
+
+function buildExpandRow(r) {
+  const idx = r._rowIndex;
+  const f = (key, full = false) => `
+    <div class="expand-field${full ? ' expand-field-full' : ''}">
+      <label class="expand-label">${FIELD_LABELS[key]}</label>
+      ${key === 'notes'
+        ? `<textarea id="ef-${idx}-${key}" rows="3">${esc(r[key] || '')}</textarea>`
+        : `<input type="text" id="ef-${idx}-${key}" value="${esc(r[key] || '')}">`}
+    </div>`;
+  return `
+    <tr id="expand-${idx}" class="expand-row" style="display:none;">
+      <td colspan="7">
+        <div class="expand-panel">
+          <div class="expand-grid">
+            ${f('orgName')}${f('region')}${f('studentGroup')}
+            ${f('primaryFocus')}${f('orgSize')}${f('outreach')}
+            ${f('contactEmail')}${f('website')}${f('consent')}
+            ${f('dateLogged')}
+            ${f('fundingArch', true)}${f('instFriction', true)}
+            ${f('opTrauma', true)}${f('diasporaReal', true)}
+            ${f('notes', true)}
+          </div>
+          <div class="expand-actions">
+            <button class="btn btn-primary" style="padding:10px 20px;font-size:13px;" onclick="saveRow(${idx})">
+              <span id="save-label-${idx}">Save changes</span>
+            </button>
+            <button class="btn btn-ghost" style="padding:10px 20px;font-size:13px;" onclick="toggleExpand(${idx})">Cancel</button>
+          </div>
+        </div>
+      </td>
+    </tr>`;
+}
+
+function toggleExpand(idx) {
+  const row = document.getElementById(`expand-${idx}`);
+  const btn = document.getElementById(`see-more-${idx}`);
+  const isOpen = row.style.display !== 'none';
+  row.style.display = isOpen ? 'none' : '';
+  btn.textContent = isOpen ? 'See more' : 'See less';
+}
+
+async function saveRow(idx) {
+  const label = document.getElementById(`save-label-${idx}`);
+  label.textContent = 'Saving…';
+  const payload = { action: 'update', rowIndex: idx };
+  Object.keys(FIELD_LABELS).forEach(key => {
+    const el = document.getElementById(`ef-${idx}-${key}`);
+    payload[key] = el ? el.value : '';
+  });
+  try {
+    await fetch(ENDPOINT, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload),
+    });
+    const tr = document.getElementById(`row-${idx}`);
+    if (tr) {
+      tr.cells[0].textContent = payload.orgName || '—';
+      tr.cells[0].title = payload.orgName || '';
+      tr.cells[1].textContent = payload.region || '—';
+      tr.cells[2].textContent = payload.studentGroup || '—';
+      tr.cells[3].textContent = payload.primaryFocus || '—';
+      tr.cells[3].title = payload.primaryFocus || '';
+      tr.cells[4].textContent = payload.outreach || '—';
+      tr.cells[5].textContent = payload.dateLogged || '—';
+    }
+    toggleExpand(idx);
+    showToast('Saved', `${payload.orgName || 'Row'} updated.`);
+  } catch (err) {
+    showToast('Save failed', err.message, true);
+  } finally {
+    label.textContent = 'Save changes';
+  }
+}
+
 async function loadData() {
   const body = document.getElementById('dataBody');
   const status = document.getElementById('dataStatus');
@@ -1127,15 +1254,19 @@ async function loadData() {
       return;
     }
     body.innerHTML = rows.map(r => `
-      <tr>
+      <tr id="row-${r._rowIndex}">
         <td title="${esc(r.orgName)}">${esc(r.orgName || '—')}</td>
         <td>${esc(r.region || '—')}</td>
         <td>${esc(r.studentGroup || '—')}</td>
         <td title="${esc(r.primaryFocus)}">${esc(r.primaryFocus || '—')}</td>
         <td>${esc(r.outreach || '—')}</td>
         <td>${esc(r.dateLogged || '—')}</td>
-        <td><button class="btn-delete" onclick="deleteRow(${r._rowIndex}, this)">Delete</button></td>
-      </tr>`).join('');
+        <td><div style="display:flex;gap:6px;">
+          <button id="see-more-${r._rowIndex}" class="btn-see-more" onclick="toggleExpand(${r._rowIndex})">See more</button>
+          <button class="btn-delete" onclick="deleteRow(${r._rowIndex}, this)">Delete</button>
+        </div></td>
+      </tr>
+      ${buildExpandRow(r)}`).join('');
     status.textContent = `${rows.length} rows`;
   } catch (err) {
     body.innerHTML = '<tr><td colspan="7" class="empty-state">Failed to load — check Apps Script is updated.</td></tr>';
@@ -1149,8 +1280,9 @@ async function deleteRow(rowIndex, btn) {
   btn.disabled = true;
   try {
     await fetch(`${ENDPOINT}?action=delete&rowIndex=${rowIndex}`);
-    btn.closest('tr').remove();
-    const remaining = document.querySelectorAll('#dataBody tr').length;
+    document.getElementById(`row-${rowIndex}`)?.remove();
+    document.getElementById(`expand-${rowIndex}`)?.remove();
+    const remaining = document.querySelectorAll('#dataBody tr[id^="row-"]').length;
     document.getElementById('dataStatus').textContent = `${remaining} rows`;
   } catch (err) {
     btn.textContent = 'Error';

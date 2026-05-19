@@ -52,6 +52,14 @@ function doPost(e) {
       }
     }
 
+    if (data.action === 'update') {
+      const rowIndex = parseInt(data.rowIndex);
+      if (!rowIndex || rowIndex <= 1) throw new Error('Invalid rowIndex for update.');
+      const row = COLUMN_ORDER.map(k => data[k] || '');
+      sheet.getRange(rowIndex, 1, 1, row.length).setValues([row]);
+      return jsonResponse({ ok: true });
+    }
+
     const row = COLUMN_ORDER.map(k => data[k] || '');
     sheet.appendRow(row);
 
