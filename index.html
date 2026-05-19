@@ -1,0 +1,793 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Master Database — Diaspora Nonprofits Canada</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600;9..144,700&family=JetBrains+Mono:wght@300;400;500&family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0a0b;
+  --bg-2: #111114;
+  --bg-3: #18181c;
+  --line: #26262c;
+  --line-bright: #3a3a44;
+  --text: #f4f4f5;
+  --text-dim: #a1a1aa;
+  --text-faint: #71717a;
+  --accent: #d4ff00;
+  --accent-dim: #a3cc00;
+  --danger: #ff4d6d;
+  --success: #4ade80;
+  --display: 'Fraunces', 'Georgia', serif;
+  --body: 'Geist', -apple-system, sans-serif;
+  --mono: 'JetBrains Mono', 'SF Mono', monospace;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(212, 255, 0, 0.08), transparent 60%),
+    radial-gradient(ellipse 60% 40% at 85% 110%, rgba(212, 255, 0, 0.04), transparent 60%);
+  pointer-events: none;
+  z-index: 0;
+}
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(255,255,255,0.015) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.015) 1px, transparent 1px);
+  background-size: 40px 40px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ===== Layout ===== */
+.shell { position: relative; z-index: 1; max-width: 1400px; margin: 0 auto; padding: 32px 48px 80px; }
+
+/* ===== Header ===== */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 24px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 48px;
+  opacity: 0;
+  animation: fadeUp 0.7s 0.05s forwards;
+}
+.brand { display: flex; align-items: center; gap: 14px; }
+.brand-mark {
+  width: 36px; height: 36px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-dim));
+  display: grid; place-items: center;
+  font-family: var(--display);
+  font-weight: 700;
+  font-size: 18px;
+  color: #0a0a0b;
+  font-style: italic;
+}
+.brand-text {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+.brand-text strong { color: var(--text); font-weight: 500; }
+.header-meta {
+  display: flex; align-items: center; gap: 24px;
+  font-family: var(--mono); font-size: 11px;
+  color: var(--text-faint); letter-spacing: 0.05em;
+}
+.status-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--success);
+  box-shadow: 0 0 8px var(--success);
+  animation: pulse 2s infinite;
+}
+.header-meta span { display: inline-flex; align-items: center; gap: 8px; }
+
+/* ===== Hero ===== */
+.hero {
+  margin-bottom: 56px;
+  opacity: 0;
+  animation: fadeUp 0.8s 0.15s forwards;
+}
+.hero-eyebrow {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent);
+  margin-bottom: 16px;
+}
+.hero-title {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: clamp(40px, 5vw, 64px);
+  line-height: 1.02;
+  letter-spacing: -0.02em;
+  margin-bottom: 20px;
+  max-width: 900px;
+}
+.hero-title em {
+  font-style: italic;
+  font-weight: 300;
+  color: var(--accent);
+}
+.hero-sub {
+  font-size: 17px;
+  color: var(--text-dim);
+  max-width: 620px;
+  line-height: 1.6;
+}
+
+/* ===== Stats strip ===== */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 56px;
+  opacity: 0;
+  animation: fadeUp 0.8s 0.25s forwards;
+}
+.stat {
+  padding: 24px 28px;
+  border-right: 1px solid var(--line);
+}
+.stat:last-child { border-right: none; }
+.stat-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: 8px;
+}
+.stat-value {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: 32px;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.stat-value em { font-style: italic; color: var(--accent); }
+.stat-meta { font-family: var(--mono); font-size: 11px; color: var(--text-faint); margin-top: 6px; }
+
+/* ===== Form ===== */
+.form-wrap { display: grid; grid-template-columns: 220px 1fr; gap: 64px; }
+.form-side {
+  position: sticky; top: 32px; align-self: start;
+  opacity: 0; animation: fadeUp 0.8s 0.35s forwards;
+}
+.side-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--text-faint);
+  margin-bottom: 16px;
+}
+.toc { display: flex; flex-direction: column; gap: 2px; }
+.toc-item {
+  display: flex; align-items: center; gap: 12px;
+  padding: 10px 12px;
+  font-size: 13px;
+  color: var(--text-dim);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+  border-left: 2px solid transparent;
+}
+.toc-item:hover { color: var(--text); background: var(--bg-2); }
+.toc-item.active { color: var(--accent); border-left-color: var(--accent); }
+.toc-num {
+  font-family: var(--mono); font-size: 10px;
+  color: var(--text-faint); width: 18px;
+}
+
+.form-main { opacity: 0; animation: fadeUp 0.8s 0.4s forwards; }
+.section {
+  margin-bottom: 64px;
+  padding-bottom: 64px;
+  border-bottom: 1px dashed var(--line);
+}
+.section:last-of-type { border-bottom: none; }
+.section-num {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+.section-title {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: 32px;
+  letter-spacing: -0.01em;
+  margin-bottom: 6px;
+}
+.section-desc { font-size: 14px; color: var(--text-dim); margin-bottom: 32px; max-width: 560px; }
+
+.field { margin-bottom: 24px; }
+.field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+.field-row-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; }
+.label {
+  display: block;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 10px;
+}
+.label .req { color: var(--accent); margin-left: 4px; }
+
+input[type="text"], input[type="email"], input[type="url"], input[type="date"],
+select, textarea {
+  width: 100%;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  padding: 14px 16px;
+  color: var(--text);
+  font-family: var(--body);
+  font-size: 14px;
+  transition: all 0.2s;
+  outline: none;
+}
+input:focus, select:focus, textarea:focus {
+  border-color: var(--accent);
+  background: var(--bg-3);
+  box-shadow: 0 0 0 3px rgba(212, 255, 0, 0.08);
+}
+input::placeholder, textarea::placeholder { color: var(--text-faint); }
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23a1a1aa' d='M6 8L0 0h12z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 18px center;
+  padding-right: 44px;
+}
+textarea { resize: vertical; min-height: 100px; font-family: var(--body); }
+
+/* Chip selector — multi-select */
+.chips {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  padding: 6px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  min-height: 56px;
+}
+.chip {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 8px 14px;
+  font-size: 13px;
+  background: transparent;
+  border: 1px solid var(--line-bright);
+  border-radius: 100px;
+  color: var(--text-dim);
+  cursor: pointer;
+  transition: all 0.18s;
+  font-family: var(--body);
+  user-select: none;
+}
+.chip:hover { color: var(--text); border-color: var(--text-faint); }
+.chip.selected {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #0a0a0b;
+  font-weight: 500;
+}
+.chip.selected::after { content: '✓'; font-size: 11px; }
+
+.helper {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-faint);
+  margin-top: 8px;
+  letter-spacing: 0.02em;
+}
+.helper.warn { color: var(--danger); }
+
+/* Submit */
+.actions {
+  display: flex; gap: 16px; align-items: center;
+  padding-top: 16px;
+}
+.btn {
+  display: inline-flex; align-items: center; gap: 10px;
+  padding: 16px 28px;
+  font-family: var(--body);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  border-radius: 6px;
+  cursor: pointer;
+  border: none;
+  transition: all 0.2s;
+}
+.btn-primary {
+  background: var(--accent);
+  color: #0a0a0b;
+  position: relative;
+  overflow: hidden;
+}
+.btn-primary:hover { background: #e5ff33; transform: translateY(-1px); }
+.btn-primary:active { transform: translateY(0); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+.btn-ghost {
+  background: transparent;
+  color: var(--text-dim);
+  border: 1px solid var(--line-bright);
+}
+.btn-ghost:hover { color: var(--text); border-color: var(--text-faint); }
+.btn-arrow { font-family: var(--mono); }
+
+/* Toast */
+.toast {
+  position: fixed;
+  bottom: 32px; right: 32px;
+  background: var(--bg-3);
+  border: 1px solid var(--line-bright);
+  border-left: 3px solid var(--accent);
+  border-radius: 8px;
+  padding: 16px 20px;
+  min-width: 320px;
+  max-width: 420px;
+  transform: translateY(120%);
+  opacity: 0;
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 100;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+.toast.error { border-left-color: var(--danger); }
+.toast-title { font-weight: 600; font-size: 14px; margin-bottom: 4px; }
+.toast-msg { font-size: 13px; color: var(--text-dim); }
+
+/* footer */
+.footer {
+  margin-top: 80px;
+  padding-top: 24px;
+  border-top: 1px solid var(--line);
+  display: flex; justify-content: space-between;
+  font-family: var(--mono); font-size: 11px;
+  color: var(--text-faint); letter-spacing: 0.05em;
+}
+
+/* Animations */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.loading {
+  background: linear-gradient(90deg, var(--accent) 0%, #e5ff33 50%, var(--accent) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.2s infinite;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+  .shell { padding: 24px; }
+  .form-wrap { grid-template-columns: 1fr; gap: 32px; }
+  .form-side { position: static; }
+  .stats { grid-template-columns: repeat(2, 1fr); }
+  .stat:nth-child(2) { border-right: none; }
+  .stat:nth-child(1), .stat:nth-child(2) { border-bottom: 1px solid var(--line); }
+  .field-row, .field-row-3 { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- ========== HEADER ========== -->
+  <header class="header">
+    <div class="brand">
+      <div class="brand-mark"><em>M</em></div>
+      <div class="brand-text"><strong>MASTER&nbsp;DATABASE</strong> · DIASPORA NONPROFITS CA</div>
+    </div>
+    <div class="header-meta">
+      <span><span class="status-dot"></span> LIVE · SYNCED TO SHEETS</span>
+      <span id="dateNow"></span>
+    </div>
+  </header>
+
+  <!-- ========== HERO ========== -->
+  <section class="hero">
+    <div class="hero-eyebrow">— Internal Tool · Summer Research Team</div>
+    <h1 class="hero-title">A structured ledger for <em>1,200</em> diaspora-led nonprofits across Canada.</h1>
+    <p class="hero-sub">Every submission lands directly in the master spreadsheet. Multi-select fields preserve the systemic-barrier vocabulary. Duplicate URLs are flagged on entry.</p>
+  </section>
+
+  <!-- ========== STATS ========== -->
+  <section class="stats">
+    <div class="stat">
+      <div class="stat-label">Target</div>
+      <div class="stat-value">1,200</div>
+      <div class="stat-meta">organizations</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Regions</div>
+      <div class="stat-value"><em>13</em></div>
+      <div class="stat-meta">provinces + territories</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Sectors</div>
+      <div class="stat-value">10</div>
+      <div class="stat-meta">primary focus areas</div>
+    </div>
+    <div class="stat">
+      <div class="stat-label">Barrier dims.</div>
+      <div class="stat-value"><em>13</em></div>
+      <div class="stat-meta">structural codes</div>
+    </div>
+  </section>
+
+  <!-- ========== FORM ========== -->
+  <div class="form-wrap">
+
+    <aside class="form-side">
+      <div class="side-label">— Sections</div>
+      <nav class="toc">
+        <a class="toc-item active" href="#s1"><span class="toc-num">01</span>Identification</a>
+        <a class="toc-item" href="#s2"><span class="toc-num">02</span>Classification</a>
+        <a class="toc-item" href="#s3"><span class="toc-num">03</span>Contact</a>
+        <a class="toc-item" href="#s4"><span class="toc-num">04</span>Structural Barriers</a>
+        <a class="toc-item" href="#s5"><span class="toc-num">05</span>Outreach &amp; Notes</a>
+      </nav>
+    </aside>
+
+    <form class="form-main" id="entryForm" novalidate>
+
+      <!-- SECTION 1 -->
+      <section class="section" id="s1">
+        <div class="section-num">— 01 / 05</div>
+        <h2 class="section-title">Identification</h2>
+        <p class="section-desc">Who is this organization, and where in Canada are they based?</p>
+
+        <div class="field">
+          <label class="label" for="orgName">Organization Name<span class="req">*</span></label>
+          <input type="text" id="orgName" name="orgName" placeholder="e.g. Black Business and Professional Association" required>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label class="label" for="region">Region / Province<span class="req">*</span></label>
+            <select id="region" name="region" required>
+              <option value="">Select a region…</option>
+              <option>AB</option><option>BC</option><option>MB</option><option>NB</option>
+              <option>NL</option><option>NS</option><option>ON</option><option>PE</option>
+              <option>QC</option><option>SK</option><option>NT</option><option>NU</option>
+              <option>YT</option><option>Territories (Combined)</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="label" for="studentGroup">Assigned Student<span class="req">*</span></label>
+            <select id="studentGroup" name="studentGroup" required>
+              <option value="">Assign to…</option>
+              <option>Josh</option>
+              <option>Jared</option>
+              <option>Marcus</option>
+              <option>Jeevan</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 2 -->
+      <section class="section" id="s2">
+        <div class="section-num">— 02 / 05</div>
+        <h2 class="section-title">Classification</h2>
+        <p class="section-desc">Primary sector focus and organizational scale.</p>
+
+        <div class="field-row">
+          <div class="field">
+            <label class="label" for="primaryFocus">Primary Focus<span class="req">*</span></label>
+            <select id="primaryFocus" name="primaryFocus" required>
+              <option value="">Select sector…</option>
+              <option>Black &amp; Diaspora Community Advocacy</option>
+              <option>National &amp; Ethnic Associations</option>
+              <option>Professional Associations &amp; Networks</option>
+              <option>Economic Development</option>
+              <option>Social &amp; Community Services</option>
+              <option>Arts, Culture &amp; Heritage</option>
+              <option>Sports &amp; Recreation</option>
+              <option>Education &amp; Training</option>
+              <option>International Development &amp; Relief</option>
+              <option>Faith-Based &amp; Spiritual Community Services</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="label" for="orgSize">Organization Size</label>
+            <select id="orgSize" name="orgSize">
+              <option value="">Select size…</option>
+              <option>Large (Revenue >$250k)</option>
+              <option>Medium ($50k-$250k)</option>
+              <option>Small (&lt;$50k / Grassroots)</option>
+            </select>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 3 -->
+      <section class="section" id="s3">
+        <div class="section-num">— 03 / 05</div>
+        <h2 class="section-title">Contact</h2>
+        <p class="section-desc">Email and a public link. The URL is the anti-duplication key.</p>
+
+        <div class="field-row">
+          <div class="field">
+            <label class="label" for="contactEmail">Primary Contact Email</label>
+            <input type="email" id="contactEmail" name="contactEmail" placeholder="contact@org.ca">
+          </div>
+          <div class="field">
+            <label class="label" for="website">Website / Social Link<span class="req">*</span></label>
+            <input type="url" id="website" name="website" placeholder="https://…" required>
+            <div class="helper" id="urlHelper">Used as the unique identifier across the team.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 4 -->
+      <section class="section" id="s4">
+        <div class="section-num">— 04 / 05</div>
+        <h2 class="section-title">Structural Barriers</h2>
+        <p class="section-desc">Tap every code that applies. Multiple selections per dimension are expected — that's the whole point of the schema.</p>
+
+        <div class="field">
+          <label class="label">Funding Architecture</label>
+          <div class="chips" data-name="fundingArch">
+            <button type="button" class="chip" data-v="Micro-Reporting Burden">Micro-Reporting Burden</button>
+            <button type="button" class="chip" data-v="Intermediary Gatekeeping">Intermediary Gatekeeping</button>
+            <button type="button" class="chip" data-v="Reimbursement-Model Exclusion">Reimbursement-Model Exclusion</button>
+            <button type="button" class="chip" data-v="Short-Term Colonial Cycle">Short-Term Colonial Cycle</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Institutional Friction</label>
+          <div class="chips" data-name="instFriction">
+            <button type="button" class="chip" data-v="Systemic Audit Disproportion">Systemic Audit Disproportion</button>
+            <button type="button" class="chip" data-v="Institutional Isolation">Institutional Isolation</button>
+            <button type="button" class="chip" data-v="Bilingual Disadvantage">Bilingual Disadvantage</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Operational Trauma</label>
+          <div class="chips" data-name="opTrauma">
+            <button type="button" class="chip" data-v="Uncompensated Crisis Response">Uncompensated Crisis Response</button>
+            <button type="button" class="chip" data-v="Infrastructure Deficit">Infrastructure Deficit</button>
+            <button type="button" class="chip" data-v="In-Kind Exploitation">In-Kind Exploitation</button>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label">Diaspora Realities</label>
+          <div class="chips" data-name="diasporaReal">
+            <button type="button" class="chip" data-v="Transnational Split Mandate">Transnational Split Mandate</button>
+            <button type="button" class="chip" data-v="Cultural Translation Overhead">Cultural Translation Overhead</button>
+            <button type="button" class="chip" data-v="Informal Mutual Aid (Esusu/Suisui)">Informal Mutual Aid (Esusu/Suisui)</button>
+          </div>
+        </div>
+      </section>
+
+      <!-- SECTION 5 -->
+      <section class="section" id="s5">
+        <div class="section-num">— 05 / 05</div>
+        <h2 class="section-title">Outreach &amp; Notes</h2>
+        <p class="section-desc">Where we are with this organization, and anything qualitative worth preserving.</p>
+
+        <div class="field-row">
+          <div class="field">
+            <label class="label" for="outreach">Outreach Status</label>
+            <select id="outreach" name="outreach">
+              <option>Not Started</option>
+              <option>Email Sent</option>
+              <option>Phone Called</option>
+              <option>Interview Complete</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="label" for="consent">Data Consent</label>
+            <select id="consent" name="consent">
+              <option>Pending</option>
+              <option>Granted</option>
+              <option>Opted-Out</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label class="label" for="notes">Qualitative Notes</label>
+          <textarea id="notes" name="notes" rows="4" placeholder="Direct quotes, context, anything that won't fit a dropdown…"></textarea>
+        </div>
+      </section>
+
+      <!-- ACTIONS -->
+      <div class="actions">
+        <button type="submit" class="btn btn-primary" id="submitBtn">
+          <span id="submitLabel">Commit to ledger</span>
+          <span class="btn-arrow">→</span>
+        </button>
+        <button type="reset" class="btn btn-ghost">Clear form</button>
+        <span class="helper" id="formStatus" style="margin-left:auto;"></span>
+      </div>
+
+    </form>
+  </div>
+
+  <footer class="footer">
+    <div>v1.0 · INTERNAL · DO NOT DISTRIBUTE</div>
+    <div>POSTS → MasterDatabase_African_Diaspora_Nonprofits / MasterData</div>
+  </footer>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast">
+  <div class="toast-title" id="toastTitle">Submitted</div>
+  <div class="toast-msg" id="toastMsg"></div>
+</div>
+
+<script>
+// ============================================================
+// CONFIG — replace with your deployed Apps Script web app URL
+// ============================================================
+const ENDPOINT = "https://script.google.com/macros/s/AKfycbzqT1wdamfb41JkeDvheBndzfvqaVmT0gE-PxWQkpWaJRCATWw8nONe8d3FIKy1UQDT/exec";
+// ============================================================
+
+// date display
+const d = new Date();
+document.getElementById('dateNow').textContent =
+  d.toLocaleDateString('en-CA', { year: 'numeric', month: 'short', day: '2-digit' }).toUpperCase();
+
+// chip multi-select
+document.querySelectorAll('.chips').forEach(group => {
+  group.addEventListener('click', e => {
+    const chip = e.target.closest('.chip');
+    if (!chip) return;
+    chip.classList.toggle('selected');
+  });
+});
+
+function readChips(name) {
+  const group = document.querySelector(`.chips[data-name="${name}"]`);
+  return Array.from(group.querySelectorAll('.chip.selected')).map(c => c.dataset.v).join(', ');
+}
+
+// TOC active state on scroll
+const sections = document.querySelectorAll('.section');
+const tocItems = document.querySelectorAll('.toc-item');
+const io = new IntersectionObserver(entries => {
+  entries.forEach(en => {
+    if (en.isIntersecting) {
+      const id = en.target.id;
+      tocItems.forEach(t => {
+        t.classList.toggle('active', t.getAttribute('href') === '#' + id);
+      });
+    }
+  });
+}, { rootMargin: '-30% 0px -60% 0px' });
+sections.forEach(s => io.observe(s));
+
+// toast
+function showToast(title, msg, isError = false) {
+  const t = document.getElementById('toast');
+  document.getElementById('toastTitle').textContent = title;
+  document.getElementById('toastMsg').textContent = msg;
+  t.classList.toggle('error', isError);
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 4500);
+}
+
+// submission
+document.getElementById('entryForm').addEventListener('submit', async e => {
+  e.preventDefault();
+  const btn = document.getElementById('submitBtn');
+  const label = document.getElementById('submitLabel');
+  const status = document.getElementById('formStatus');
+
+  const required = ['orgName','region','studentGroup','primaryFocus','website'];
+  for (const id of required) {
+    const el = document.getElementById(id);
+    if (!el.value.trim()) {
+      el.focus();
+      showToast('Missing field', `Please fill in: ${el.previousElementSibling.textContent.replace('*','').trim()}`, true);
+      return;
+    }
+  }
+
+  const payload = {
+    orgName:       document.getElementById('orgName').value.trim(),
+    region:        document.getElementById('region').value,
+    primaryFocus:  document.getElementById('primaryFocus').value,
+    orgSize:       document.getElementById('orgSize').value,
+    studentGroup:  document.getElementById('studentGroup').value,
+    contactEmail:  document.getElementById('contactEmail').value.trim(),
+    website:       document.getElementById('website').value.trim(),
+    fundingArch:   readChips('fundingArch'),
+    instFriction:  readChips('instFriction'),
+    opTrauma:      readChips('opTrauma'),
+    diasporaReal:  readChips('diasporaReal'),
+    outreach:      document.getElementById('outreach').value,
+    consent:       document.getElementById('consent').value,
+    notes:         document.getElementById('notes').value.trim(),
+    dateLogged:    new Date().toISOString().slice(0,10),
+  };
+
+  if (ENDPOINT.startsWith('PASTE_')) {
+    console.log('Would submit:', payload);
+    showToast('Demo mode', 'Configure ENDPOINT in the HTML to enable live submission. Payload logged to console.', false);
+    return;
+  }
+
+  btn.disabled = true;
+  label.textContent = 'Committing…';
+  btn.classList.add('loading');
+  status.textContent = '';
+
+  try {
+    // Apps Script web apps require a "simple" request to avoid CORS preflight
+    const res = await fetch(ENDPOINT, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
+      body: JSON.stringify(payload),
+    });
+    // no-cors gives an opaque response — assume success if no throw
+    showToast('Committed to ledger', `${payload.orgName} added to MasterData.`);
+    document.getElementById('entryForm').reset();
+    document.querySelectorAll('.chip.selected').forEach(c => c.classList.remove('selected'));
+  } catch (err) {
+    showToast('Submission failed', err.message || 'Check the endpoint URL and try again.', true);
+  } finally {
+    btn.disabled = false;
+    label.textContent = 'Commit to ledger';
+    btn.classList.remove('loading');
+  }
+});
+
+// smooth scroll for TOC
+tocItems.forEach(item => {
+  item.addEventListener('click', e => {
+    e.preventDefault();
+    document.querySelector(item.getAttribute('href')).scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
+</script>
+</body>
+</html>
