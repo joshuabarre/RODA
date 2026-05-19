@@ -398,6 +398,64 @@ textarea { resize: vertical; min-height: 100px; font-family: var(--body); }
   animation: shimmer 1.2s infinite;
 }
 
+/* ===== Login overlay ===== */
+#loginOverlay {
+  position: fixed;
+  inset: 0;
+  background: var(--bg);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+#loginOverlay::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 80% 50% at 50% -10%, rgba(212, 255, 0, 0.08), transparent 60%),
+    radial-gradient(ellipse 60% 40% at 85% 110%, rgba(212, 255, 0, 0.04), transparent 60%);
+  pointer-events: none;
+}
+.login-box {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  max-width: 400px;
+  padding: 48px;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 40px 80px rgba(0,0,0,0.5);
+}
+.login-brand {
+  display: flex; align-items: center; gap: 14px;
+  margin-bottom: 40px;
+}
+.login-title {
+  font-family: var(--display);
+  font-weight: 400;
+  font-size: 28px;
+  letter-spacing: -0.01em;
+  margin-bottom: 6px;
+}
+.login-sub {
+  font-family: var(--mono);
+  font-size: 11px;
+  color: var(--text-faint);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  margin-bottom: 32px;
+}
+.login-error {
+  font-family: var(--mono);
+  font-size: 12px;
+  color: var(--danger);
+  margin-top: 12px;
+  min-height: 18px;
+  letter-spacing: 0.03em;
+}
+
 /* Responsive */
 @media (max-width: 900px) {
   .shell { padding: 24px; }
@@ -411,6 +469,42 @@ textarea { resize: vertical; min-height: 100px; font-family: var(--body); }
 </style>
 </head>
 <body>
+
+<!-- ========== LOGIN OVERLAY ========== -->
+<div id="loginOverlay">
+  <div class="login-box">
+    <div class="login-brand">
+      <div class="brand-mark"><em>M</em></div>
+      <div class="brand-text"><strong>MASTER&nbsp;DATABASE</strong> · DIASPORA NONPROFITS CA</div>
+    </div>
+    <div class="login-title">Sign in</div>
+    <div class="login-sub">— Internal Tool · Summer Research Team</div>
+
+    <div class="field">
+      <label class="label" for="loginName">Who are you?</label>
+      <select id="loginName">
+        <option value="">Select your name…</option>
+        <option>Josh</option>
+        <option>Marcus</option>
+        <option>Jared</option>
+        <option>Jeevan</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label class="label" for="loginPassword">Password</label>
+      <input type="password" id="loginPassword" placeholder="Enter password">
+    </div>
+
+    <div class="login-error" id="loginError"></div>
+
+    <div style="margin-top: 24px;">
+      <button class="btn btn-primary" style="width:100%; justify-content:center;" onclick="doLogin()">
+        Enter <span class="btn-arrow">→</span>
+      </button>
+    </div>
+  </div>
+</div>
 
 <div class="shell">
 
@@ -664,6 +758,39 @@ textarea { resize: vertical; min-height: 100px; font-family: var(--body); }
 </div>
 
 <script>
+// ============================================================
+// LOGIN
+// ============================================================
+const USERS = { Josh: 'Roda2026!', Marcus: 'Roda2026!', Jared: 'Roda2026!', Jeevan: 'Roda2026!' };
+
+function doLogin() {
+  const name = document.getElementById('loginName').value;
+  const pass = document.getElementById('loginPassword').value;
+  const err  = document.getElementById('loginError');
+  if (!name) { err.textContent = 'Select your name.'; return; }
+  if (USERS[name] !== pass) { err.textContent = 'Incorrect password. Try again.'; return; }
+  sessionStorage.setItem('rodaUser', name);
+  applySession(name);
+}
+
+function applySession(name) {
+  document.getElementById('loginOverlay').style.display = 'none';
+  const sel = document.getElementById('studentGroup');
+  sel.value = name;
+  sel.disabled = true;
+  sel.style.opacity = '0.6';
+  sel.style.cursor = 'not-allowed';
+}
+
+// Allow Enter key on login form
+document.getElementById('loginPassword').addEventListener('keydown', e => {
+  if (e.key === 'Enter') doLogin();
+});
+
+// Restore session if already logged in
+const existing = sessionStorage.getItem('rodaUser');
+if (existing && USERS[existing]) applySession(existing);
+
 // ============================================================
 // CONFIG — replace with your deployed Apps Script web app URL
 // ============================================================
